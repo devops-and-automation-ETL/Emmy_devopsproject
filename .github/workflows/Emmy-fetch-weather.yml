@@ -60,7 +60,7 @@ jobs:
 
       - name: Upload Error Log
         if: failure() && github.event.inputs.log_errors == 'true'
-        uses: actions/upload-artifact@v3  # Uppdaterad till v3
+        uses: actions/upload-artifact@v3
         with:
           name: error_log
           path: error_log.txt
