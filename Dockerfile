@@ -12,4 +12,4 @@ EXPOSE 80
 ENV FLASK_APP = app.py
 ENV FLASK_ENV = development
 
-CMD ["python", "run", "--host=0.0.0.0", "--port=80"]
+CMD ["flask", "run", "--host=0.0.0.0", "--port=80"]
