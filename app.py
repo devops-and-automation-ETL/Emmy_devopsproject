@@ -3,10 +3,6 @@ import requests
 
 app = Flask(__name__)
 
-#@app.route('/')
-#def home():
-#    return "Hello, this is your Flask app running in Docker!
-
 @app.route('/temperature')
 def get_temperature():
     api_url = "https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/18.0686/lat/59.3293/data.json"
