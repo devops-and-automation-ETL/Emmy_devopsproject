@@ -90,30 +90,34 @@ jobs:
         path: test.log 
 
   build-and-push:
-    name: Build and Push Docker Image
-    runs-on: ubuntu-latest
-    needs: run-tests
-    if: ${{ needs.run-tests.result == 'success' }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+   name: Build and Push Docker Image
+   runs-on: ubuntu-latest
+   needs: run-tests
+   if: ${{ needs.run-tests.result == 'success' }}
+   steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.EMMY_DOCKER_USERNAME }}
-          password: ${{ secrets.EMMY_DOCKER_PASSWORD }}
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.EMMY_DOCKER_USERNAME }}
+        password: ${{ secrets.EMMY_DOCKER_PASSWORD }}
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.DOCKER_IMAGE_NAME }}
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ env.DOCKER_IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch,pattern=main
+          type=raw,value=latest
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
