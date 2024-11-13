@@ -1,7 +1,10 @@
+from flask import Flask, jsonify
 import requests
 from datetime import datetime
-import time
 
+app = Flask(__name__)
+
+# Din URL till SMHI API
 url = "https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/18.0686/lat/59.3293/data.json"
 
 def fetch_weather_data():
@@ -35,8 +38,10 @@ def fetch_weather_data():
     else:
         return []
 
+@app.route('/weather')
+def get_weather():
+    weather_data = fetch_weather_data()
+    return jsonify(weather_data)
+
 if __name__ == '__main__':
-    while True:
-        weather_data = fetch_weather_data()
-        print(weather_data)
-        time.sleep(3600)
+    app.run(host='0.0.0.0', port=80)
