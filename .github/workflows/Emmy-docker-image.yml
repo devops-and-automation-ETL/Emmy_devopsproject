@@ -1,0 +1,93 @@
+name: CI/CD Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      log_errors:
+        description: 'Set to true to generate a log-error artifact if tests fail'
+        required: true
+        default: 'false'
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  DOCKER_IMAGE_NAME: emmynaessrieback/devops_project_emmy:latest
+
+jobs:
+
+  fetch-data:
+    name: Fetch Data from SMHI API
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Fetch Temperature Data
+        env:
+          API_SMHI_KEY: ${{ secrets.API_SMHI_KEY }}
+        run: |
+          # Exempel på hur du kan hämta data från SMHI API
+          curl -H "Authorization: Bearer $API_SMHI_KEY" "https://opendata-download-metobs.smhi.se/api/version/latest/parameter/1/station/159880/period/latest-hour/data.json" -o temperature.json
+
+      - name: Save Data as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: temperature-data
+          path: temperature.json
+
+  run-tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    needs: fetch-data
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Temperature Data
+        uses: actions/download-artifact@v3
+        with:
+          name: temperature-data
+
+      - name: Run Tests
+        run: |
+          # Här kör du dina faktiska testkommandon
+          echo "Running tests..."
+          # Exempel på att läsa temperaturdata och köra tester
+          TEMPERATURE=$(jq '.value' temperature.json)
+          if [ "$TEMPERATURE" -gt 0 ]; then
+            echo "Temperature is above 0°C"
+          else
+            echo "Temperature is 0°C or below"
+            exit 1
+          fi
+        continue-on-error: true
+
+      - name: Upload Error Logs
+        if: ${{ failure() && github.event.inputs.log_errors == 'true' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-error-logs
+          path: test.log  # Se till att dina tester skriver loggar till test.log
+
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: run-tests
+    if: ${{ needs.run-tests.result == 'success' }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        run: |
+          echo "${{ secrets.EMMY_DOCKER_PASSWORD }}" | docker login -u "${{ secrets.EMMY_DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build Docker Image
+        run: |
+          docker build -t $DOCKER_IMAGE_NAME .
+
+      - name: Push Docker Image
+        run: |
+          docker push $DOCKER_IMAGE_NAME
