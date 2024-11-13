@@ -4,7 +4,6 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Din URL till SMHI API
 url = "https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/18.0686/lat/59.3293/data.json"
 
 def fetch_weather_data():
