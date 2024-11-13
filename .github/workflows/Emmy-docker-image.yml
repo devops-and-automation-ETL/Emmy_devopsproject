@@ -1,3 +1,4 @@
+
 name: CI/CD Pipeline
 
 on:
@@ -52,11 +53,10 @@ jobs:
 
       - name: Run Tests
         run: |
-          # Här kör du dina faktiska testkommandon
           echo "Running tests..."
-          # Exempel på att läsa temperaturdata och köra tester
-          TEMPERATURE=$(jq '.value' temperature.json)
-          if [ "$TEMPERATURE" -gt 0 ]; then
+          TEMPERATURE=$(jq -r '.[0].value' temperature.json)
+          echo "Temperature is $TEMPERATURE°C"
+          if awk "BEGIN {exit !($TEMPERATURE > 0)}"; then
             echo "Temperature is above 0°C"
           else
             echo "Temperature is 0°C or below"
