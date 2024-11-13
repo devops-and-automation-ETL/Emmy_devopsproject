@@ -1,5 +1,8 @@
+from flask import Flask, jsonify
 import requests
-import os
+from datetime import datetime
+
+app = Flask(__name__)
 
 def fetch_weather():
     api_url = "https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/18.0686/lat/59.3293/data.json"
@@ -11,8 +14,16 @@ def fetch_weather():
     if response.status_code == 200:
         return response.json()
     else:
-        raise Exception("Failed to fetch data from SMHI API")
+        return {"error": "Failed to fetch data from SMHI API"}
+
+@app.route('/')
+def index():
+    return "Welcome to the Weather App! Visit /weather to see the weather data."
+
+@app.route('/weather')
+def get_weather():
+    weather_data = fetch_weather()
+    return jsonify(weather_data)
 
 if __name__ == "__main__":
-    weather_data = fetch_weather()
-    print("Weather data:", weather_data)
+    app.run(host='0.0.0.0', port=80)
