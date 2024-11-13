@@ -1,15 +1,15 @@
-FROM python:3.11
+FROM python:3.10
 
 WORKDIR /app
 
 COPY requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
 EXPOSE 80
 
-ENV FLASK_APP = app.py
-ENV FLASK_ENV = development
+ENV API_SMHI_KEY=${API_SMHI_KEY}
 
-CMD ["flask", "run", "--host=0.0.0.0", "--port=80"]
+CMD ["python", "app.py"]
