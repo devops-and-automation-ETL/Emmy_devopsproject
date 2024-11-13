@@ -98,14 +98,22 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Login to DockerHub
-        run: |
-          echo "${{ secrets.EMMY_DOCKER_PASSWORD }}" | docker login -u "${{ secrets.EMMY_DOCKER_USERNAME }}" --password-stdin
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.EMMY_DOCKER_USERNAME }}
+          password: ${{ secrets.EMMY_DOCKER_PASSWORD }}
 
-      - name: Build Docker Image
-        run: |
-          docker build -t $DOCKER_IMAGE_NAME .
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.DOCKER_IMAGE_NAME }}
 
-      - name: Push Docker Image
-        run: |
-          docker push $DOCKER_IMAGE_NAME
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
