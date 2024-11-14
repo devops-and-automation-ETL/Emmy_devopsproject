@@ -1,4 +1,4 @@
-name: DevOps Pipeline
+"""name: DevOps Pipeline
 
 on:
   push:
@@ -63,4 +63,4 @@ jobs:
       run: echo ${{ secrets.EMMY_DOCKER_PASSWORD }} | docker login -u ${{ secrets.EMMY_DOCKER_USERNAME }} --password-stdin
 
     - name: Push Docker image to DockerHub
-      run: docker push $DOCKER_IMAGE_NAME:latest
+      run: docker push $DOCKER_IMAGE_NAME:latest"""
