@@ -29,7 +29,6 @@ def fetch_weather():
         return jsonify(weather_info)
 
     except requests.exceptions.RequestException as e:
-        # Om ett API-fel uppstår, returnera ett felmeddelande
         return jsonify({"error": f"Failed to fetch data from SMHI API: {e}"})
 
 if __name__ == "__main__":
