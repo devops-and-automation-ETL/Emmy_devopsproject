@@ -25,7 +25,6 @@ jobs:
         env:
           API_SMHI_KEY: ${{ secrets.API_SMHI_KEY }}
         run: |
-          # Exempel på hur du kan hämta data från SMHI API
           curl -H "Authorization: Bearer $API_SMHI_KEY" "https://opendata-download-metobs.smhi.se/api/version/latest/parameter/1/station/159880/period/latest-hour/data.json" -o temperature.json
 
       - name: Save Data as Artifact
