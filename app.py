@@ -1,3 +1,4 @@
+
 import requests
 import os
 
@@ -6,7 +7,6 @@ def fetch_weather():
     headers = {
         "Accept": "application/json",
         "User-Agent": "weather-app",
-        "Authorization": f"Bearer {os.getenv('SMHI_API_KEY')}"
     }
     response = requests.get(api_url, headers=headers)
     if response.status_code == 200:
