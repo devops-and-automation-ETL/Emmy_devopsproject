@@ -1,4 +1,3 @@
-
 name: CI/CD Pipeline
 
 on:
@@ -21,53 +20,52 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Fetch Temperature Data
-        env:
-          API_SMHI_KEY: ${{ secrets.API_SMHI_KEY }}
+      - name: Fetch Weather Data
         run: |
-          curl -H "Authorization: Bearer $API_SMHI_KEY" "https://opendata-download-metobs.smhi.se/api/version/latest/parameter/1/station/159880/period/latest-hour/data.json" -o temperature.json
+          curl "https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/18.0686/lat/59.3293/data.json" -o weather.json
 
       - name: Save Data as Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: temperature-data
-          path: temperature.json
+          name: weather-data
+          path: weather.json
           
   run-tests:
     name: Run Unit Tests
     runs-on: ubuntu-latest
     needs: fetch-data
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Install jq
-      run: |
-        sudo apt-get update && sudo apt-get install -y jq
+      - name: Install jq and bc
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq bc
 
-    - name: Download Temperature Data
-      uses: actions/download-artifact@v3
-      with:
-        name: temperature-data
+      - name: Download Weather Data
+        uses: actions/download-artifact@v3
+        with:
+          name: weather-data
 
-    - name: Print temperature.json
-      run: |
-        cat temperature.json
+      - name: Print weather.json
+        run: |
+          cat weather.json
 
-    - name: Run Tests
-      run: |
+      - name: Run Tests
+        run: |
           echo "Running tests..."
 
+          # Hämta olika parametrar med jq
           TEMPERATURE=$(jq -r '.timeSeries[0].parameters[] | select(.name=="t") | .values[0]' weather.json)
           WIND_SPEED=$(jq -r '.timeSeries[0].parameters[] | select(.name=="ws") | .values[0]' weather.json)
           HUMIDITY=$(jq -r '.timeSeries[0].parameters[] | select(.name=="r") | .values[0]' weather.json)
@@ -120,45 +118,43 @@ jobs:
             exit 1
           fi
 
-      continue-on-error: true
+        continue-on-error: true
 
-
-    - name: Upload Error Logs
-      if: ${{ failure() && github.event.inputs.log_errors == 'true' }}
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-error-logs
-        path: test.log 
+      - name: Upload Error Logs
+        if: ${{ failure() && github.event.inputs.log_errors == 'true' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-error-logs
+          path: test.log 
 
   build-and-push:
-   name: Build and Push Docker Image
-   runs-on: ubuntu-latest
-   needs: run-tests
-   if: ${{ needs.run-tests.result == 'success' }}
-   steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: run-tests
+    if: ${{ needs.run-tests.result == 'success' }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.EMMY_DOCKER_USERNAME }}
-        password: ${{ secrets.EMMY_DOCKER_PASSWORD }}
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.EMMY_DOCKER_USERNAME }}
+          password: ${{ secrets.EMMY_DOCKER_PASSWORD }}
 
-    - name: Extract metadata (tags, labels) for Docker
-      id: meta
-      uses: docker/metadata-action@v4
-      with:
-        images: ${{ env.DOCKER_IMAGE_NAME }}
-        tags: |
-          type=ref,event=branch,pattern=main
-          type=raw,value=latest
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.DOCKER_IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch,pattern=main
+            type=raw,value=latest
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
