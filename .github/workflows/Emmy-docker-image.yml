@@ -66,16 +66,62 @@ jobs:
 
     - name: Run Tests
       run: |
-        echo "Running tests..."
-        TEMPERATURE=$(jq -r '.value[0].value | tonumber' temperature.json)
-        echo "Temperature is $TEMPERATURE°C"
-        if awk "BEGIN {exit !($TEMPERATURE > 0)}"; then
-          echo "Temperature is above 0°C"
-        else
-          echo "Temperature is 0°C or below"
-          exit 1
-        fi
+          echo "Running tests..."
+
+          TEMPERATURE=$(jq -r '.timeSeries[0].parameters[] | select(.name=="t") | .values[0]' weather.json)
+          WIND_SPEED=$(jq -r '.timeSeries[0].parameters[] | select(.name=="ws") | .values[0]' weather.json)
+          HUMIDITY=$(jq -r '.timeSeries[0].parameters[] | select(.name=="r") | .values[0]' weather.json)
+          AIR_PRESSURE=$(jq -r '.timeSeries[0].parameters[] | select(.name=="msl") | .values[0]' weather.json)
+          PRECIPITATION_CATEGORY=$(jq -r '.timeSeries[0].parameters[] | select(.name=="pcat") | .values[0]' weather.json)
+
+          echo "Temperature is $TEMPERATURE°C"
+          echo "Wind Speed is $WIND_SPEED m/s"
+          echo "Relative Humidity is $HUMIDITY%"
+          echo "Air Pressure is $AIR_PRESSURE hPa"
+          echo "Precipitation Category is $PRECIPITATION_CATEGORY"
+
+          # Testar om temperaturen är inom ett rimligt intervall (-50°C till 50°C)
+          if (( $(echo "$TEMPERATURE >= -50 && $TEMPERATURE <= 50" | bc -l) )); then
+            echo "Temperature is within a reasonable range."
+          else
+            echo "Temperature is outside of reasonable range!"
+            exit 1
+          fi
+
+          # Testar om vindhastigheten är inom ett rimligt intervall (0 m/s till 60 m/s)
+          if (( $(echo "$WIND_SPEED >= 0 && $WIND_SPEED <= 60" | bc -l) )); then
+            echo "Wind speed is within a reasonable range."
+          else
+            echo "Wind speed is outside of reasonable range!"
+            exit 1
+          fi
+
+          # Testar om luftfuktigheten är inom 0% till 100%
+          if (( $(echo "$HUMIDITY >= 0 && $HUMIDITY <= 100" | bc -l) )); then
+            echo "Relative humidity is within a valid range."
+          else
+            echo "Relative humidity is outside of valid range!"
+            exit 1
+          fi
+
+          # Testar om lufttrycket är inom typiska värden (300 hPa till 1100 hPa)
+          if (( $(echo "$AIR_PRESSURE >= 300 && $AIR_PRESSURE <= 1100" | bc -l) )); then
+            echo "Air pressure is within a reasonable range."
+          else
+            echo "Air pressure is outside of reasonable range!"
+            exit 1
+          fi
+
+          # Testar om nederbördstypen är en känd kategori (0 till 6)
+          if (( $(echo "$PRECIPITATION_CATEGORY >= 0 && $PRECIPITATION_CATEGORY <= 6" | bc -l) )); then
+            echo "Precipitation category is valid."
+          else
+            echo "Precipitation category is invalid!"
+            exit 1
+          fi
+
       continue-on-error: true
+
 
     - name: Upload Error Logs
       if: ${{ failure() && github.event.inputs.log_errors == 'true' }}
