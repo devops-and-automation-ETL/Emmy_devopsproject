@@ -6,28 +6,31 @@ app = Flask(__name__)
 
 @app.route("/")
 def fetch_weather():
-    api_url = "https://opendata-download-metobs.smhi.se/api/version/latest/parameter/1/station/159880/period/latest-hour/data.json"
-    response = requests.get(api_url)
-    if response.status_code == 200:
+    try:
+        api_url = "https://opendata-download-metobs.smhi.se/api/version/latest/parameter/1/station/159880/period/latest-hour/data.json"
+        response = requests.get(api_url)
+        response.raise_for_status()  # Kontrollera om förfrågan lyckades
+
         data = response.json()
-        
+        temperature = data["value"][0]["value"]
+        wind_speed = next((item["value"] for item in data["value"] if item["name"] == "ws"), "N/A")
+        wind_direction = next((item["value"] for item in data["value"] if item["name"] == "wd"), "N/A")
+        precipitation = next((item["value"] for item in data["value"] if item["name"] == "pmax"), "N/A")
+
         weather_info = {
-            "temperature": f"{next(item['value'] for item in data['value'] if item['name'] == 't')}°C",
-            "wind_speed": f"{next(item['value'] for item in data['value'] if item['name'] == 'ws')} m/s",
-            "wind_direction": f"{next(item['value'] for item in data['value'] if item['name'] == 'wd')}°",
-            "air_pressure": f"{next(item['value'] for item in data['value'] if item['name'] == 'msl')} hPa",
-            "humidity": f"{next(item['value'] for item in data['value'] if item['name'] == 'r')}%",
-            "precipitation": f"{next(item['value'] for item in data['value'] if item['name'] == 'pmax')} mm",
-            "cloud_cover": f"{next(item['value'] for item in data['value'] if item['name'] == 'tcc_mean')}%",
-            "visibility": f"{next(item['value'] for item in data['value'] if item['name'] == 'vis')} km",
-            "thunder_probability": f"{next(item['value'] for item in data['value'] if item['name'] == 'tstm')}%",
-            "solar_radiation": f"{next(item['value'] for item in data['value'] if item['name'] == 'global_rad')} W/m²",
+            "temperature": f"{temperature}°C",
+            "precipitation": f"{precipitation} mm",
+            "wind_speed": f"{wind_speed} m/s",
+            "wind_direction": f"{wind_direction}°",
             "location": "Stockholm",
             "date": datetime.now().strftime("%Y-%m-%d")
         }
+
         return jsonify(weather_info)
-    else:
-        return jsonify({"error": "Failed to fetch data from SMHI API"}), response.status_code
+
+    except requests.exceptions.RequestException as e:
+        # Om ett API-fel uppstår, returnera ett felmeddelande
+        return jsonify({"error": f"Failed to fetch data from SMHI API: {e}"})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80)
