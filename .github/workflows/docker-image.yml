@@ -46,14 +46,14 @@ jobs:
           path: ./error.log
 
   build:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+     runs-on: ubuntu-latest
+     needs: test
+     steps:
+     - name: Checkout code
+       uses: actions/checkout@v2
 
-      - name: Build Docker image
-        run: docker build -t $DOCKER_IMAGE_NAME .
+     - name: Build Docker image
+       run: docker build -f ./Dockerfile -t $DOCKER_IMAGE_NAME:latest .
 
   publish:
     runs-on: ubuntu-latest
