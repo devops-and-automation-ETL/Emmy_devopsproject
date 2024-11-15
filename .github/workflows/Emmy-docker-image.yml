@@ -24,7 +24,7 @@ jobs:
         env:
           SMHI_API_KEY: ${{ secrets.API_SMHI_KEY }}
         run: |
-          curl "$SMHI_API_KEY" -o weather.json
+          curl "$API_SMHI_KEY" -o weather.json
 
       - name: Save Data as Artifact
         uses: actions/upload-artifact@v3
