@@ -22,7 +22,7 @@ jobs:
 
       - name: Fetch Weather Data
         env:
-          SMHI_API_KEY: ${{ secrets.SMHI_API_KEY }}
+          SMHI_API_KEY: ${{ secrets.API_SMHI_KEY }}
         run: |
           curl "$SMHI_API_KEY" -o weather.json
 
