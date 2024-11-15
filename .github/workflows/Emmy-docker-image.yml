@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Emmy CI/CD Pipeline
 
 on:
   workflow_dispatch:
@@ -25,7 +25,7 @@ jobs:
           API_SMHI_KEY: ${{ secrets.API_SMHI_KEY }}
         run: |
           if [ -z "$API_SMHI_KEY" ]; then
-            echo "API_SMHI_KEY is empty!"
+            echo "API_SMHI_KEY is empty! NOOOO"
             exit 1
           else
             echo "API_SMHI_KEY is set."
@@ -78,7 +78,7 @@ jobs:
         run: |
           echo "Running tests..."
 
-          # Hämta olika parametrar med jq
+          # Slice jq json 
           TEMPERATURE=$(jq -r '.timeSeries[0].parameters[] | select(.name=="t") | .values[0]' weather.json)
           WIND_SPEED=$(jq -r '.timeSeries[0].parameters[] | select(.name=="ws") | .values[0]' weather.json)
           HUMIDITY=$(jq -r '.timeSeries[0].parameters[] | select(.name=="r") | .values[0]' weather.json)
@@ -91,7 +91,7 @@ jobs:
           echo "Air Pressure is $AIR_PRESSURE hPa"
           echo "Precipitation Category is $PRECIPITATION_CATEGORY"
 
-          # Testar om temperaturen är inom ett rimligt intervall (-50°C till 50°C)
+          # Testar om temperaturen är inom ett rimligt intervall
           if (( $(echo "$TEMPERATURE >= -50 && $TEMPERATURE <= 50" | bc -l) )); then
             echo "Temperature is within a reasonable range."
           else
@@ -99,7 +99,7 @@ jobs:
             exit 1
           fi
 
-          # Testar om vindhastigheten är inom ett rimligt intervall (0 m/s till 60 m/s)
+          # Testar om vindhastigheten är inom ett rimligt intervall
           if (( $(echo "$WIND_SPEED >= 0 && $WIND_SPEED <= 60" | bc -l) )); then
             echo "Wind speed is within a reasonable range."
           else
@@ -107,7 +107,7 @@ jobs:
             exit 1
           fi
 
-          # Testar om luftfuktigheten är inom 0% till 100%
+          # Testar om luftfuktigheten är inom rimlig intervall
           if (( $(echo "$HUMIDITY >= 0 && $HUMIDITY <= 100" | bc -l) )); then
             echo "Relative humidity is within a valid range."
           else
@@ -115,7 +115,7 @@ jobs:
             exit 1
           fi
 
-          # Testar om lufttrycket är inom typiska värden (300 hPa till 1100 hPa)
+          # Testar om lufttrycket är inom typiska värden
           if (( $(echo "$AIR_PRESSURE >= 300 && $AIR_PRESSURE <= 1100" | bc -l) )); then
             echo "Air pressure is within a reasonable range."
           else
