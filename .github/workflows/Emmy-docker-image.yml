@@ -20,11 +20,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Fetch Weather Data
+      - name: Fetch Temperature Data
         env:
           API_SMHI_KEY: ${{ secrets.API_SMHI_KEY }}
         run: |
-          curl "$API_SMHI_KEY" -o weather.json
+          curl -H "Authorization: Bearer $API_SMHI_KEY" "https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/18.0686/lat/59.3293/data.json" -o weather.json
 
       - name: Save Data as Artifact
         uses: actions/upload-artifact@v3
