@@ -21,8 +21,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Fetch Weather Data
+        env:
+          SMHI_API_KEY: ${{ secrets.SMHI_API_KEY }}
         run: |
-          curl "https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/18.0686/lat/59.3293/data.json" -o weather.json
+          curl "$SMHI_API_KEY" -o weather.json
 
       - name: Save Data as Artifact
         uses: actions/upload-artifact@v3
@@ -148,7 +150,6 @@ jobs:
         with:
           images: ${{ env.DOCKER_IMAGE_NAME }}
           tags: |
-            type=ref,event=branch,pattern=main
             type=raw,value=latest
 
       - name: Build and push Docker image
