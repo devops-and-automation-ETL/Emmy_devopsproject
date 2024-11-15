@@ -1,3 +1,5 @@
+# Detta är mitt test för att se så att det fungerade mellan actions och Docker
+
 name: Emmy - Fetch Weather Data, Test and Build Docker Image
 
 on:
